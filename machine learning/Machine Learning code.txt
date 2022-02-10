@@ -1,0 +1,651 @@
+import pandas as pd
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+
+
+# Path of the file to read
+iowa_file_path = '../input/home-data-for-ml-course/train.csv'
+
+home_data = pd.read_csv(iowa_file_path)
+# Create target object and call it y
+y = home_data.SalePrice
+# Create X
+features = ['LotArea', 'YearBuilt', '1stFlrSF', '2ndFlrSF', 'FullBath', 'BedroomAbvGr', 'TotRmsAbvGrd']
+X = home_data[features]
+
+# Split into validation and training data
+train_X, val_X, train_y, val_y = train_test_split(X, y, random_state=1)
+
+# Specify Model
+iowa_model = DecisionTreeRegressor(random_state=1)
+# Fit Model
+iowa_model.fit(train_X, train_y)
+
+# Make validation predictions and calculate mean absolute error
+val_predictions = iowa_model.predict(val_X)
+val_mae = mean_absolute_error(val_predictions, val_y)
+print("Validation MAE: {:,.0f}".format(val_mae))
+
+
+
+
+
+
+
+def get_mae(max_leaf_nodes, train_X, val_X, train_y, val_y):
+    model = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes, random_state=0)
+    model.fit(train_X, train_y)
+    preds_val = model.predict(val_X)
+    mae = mean_absolute_error(val_y, preds_val)
+    return(mae)
+
+
+
+Write a loop that tries the following values for max_leaf_nodes from a set of possible values.
+
+Call the get_mae function on each value of max_leaf_nodes. Store the output in some way that allows you to select the value of max_leaf_nodes that gives the most accurate model on your data.
+
+add Codeadd Markdown
+candidate_max_leaf_nodes = [5, 25, 50, 100, 250, 500]
+# Write loop to find the ideal tree size from candidate_max_leaf_nodes
+for max_leaves_nodes in candidate_max_leaf_nodes:
+    mae = get_mae(max_leaves_nodes , train_X,val_X,train_y,val_y)
+​
+# Store the best value of max_leaf_nodes (it will be either 5, 25, 50, 100, 250 or 500)
+best_tree_size = 100
+​
+# Check your answer
+step_1.check()
+Correct
+
+add Codeadd Markdown
+# The lines below will show you a hint or the solution.
+step_1.hint() 
+step_1.solution()
+Hint: You will call get_mae in the loop. You'll need to map the names of your data structure to the names in get_mae
+
+Solution:
+
+# Here is a short solution with a dict comprehension.
+# The lesson gives an example of how to do this with an explicit loop.
+scores = {leaf_size: get_mae(leaf_size, train_X, val_X, train_y, val_y) for leaf_size in candidate_max_leaf_nodes}
+best_tree_size = min(scores, key=scores.get)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+/kaggle/input/home-data-for-ml-course/sample_submission.csv
+/kaggle/input/home-data-for-ml-course/sample_submission.csv.gz
+/kaggle/input/home-data-for-ml-course/train.csv.gz
+/kaggle/input/home-data-for-ml-course/data_description.txt
+/kaggle/input/home-data-for-ml-course/test.csv.gz
+/kaggle/input/home-data-for-ml-course/train.csv
+/kaggle/input/home-data-for-ml-course/test.csv
+import numpy as np 
+import pandas as pd 
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+X_full = pd.read_csv("../input/home-data-for-ml-course/train.csv", index_col= 'Id')
+X_test_full = pd.read_csv("../input/home-data-for-ml-course/test.csv", index_col = 'Id')
+X_full
+MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	LandContour	Utilities	LotConfig	...	PoolArea	PoolQC	Fence	MiscFeature	MiscVal	MoSold	YrSold	SaleType	SaleCondition	SalePrice
+Id																					
+1	60	RL	65.0	8450	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	NaN	NaN	0	2	2008	WD	Normal	208500
+2	20	RL	80.0	9600	Pave	NaN	Reg	Lvl	AllPub	FR2	...	0	NaN	NaN	NaN	0	5	2007	WD	Normal	181500
+3	60	RL	68.0	11250	Pave	NaN	IR1	Lvl	AllPub	Inside	...	0	NaN	NaN	NaN	0	9	2008	WD	Normal	223500
+4	70	RL	60.0	9550	Pave	NaN	IR1	Lvl	AllPub	Corner	...	0	NaN	NaN	NaN	0	2	2006	WD	Abnorml	140000
+5	60	RL	84.0	14260	Pave	NaN	IR1	Lvl	AllPub	FR2	...	0	NaN	NaN	NaN	0	12	2008	WD	Normal	250000
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+1456	60	RL	62.0	7917	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	NaN	NaN	0	8	2007	WD	Normal	175000
+1457	20	RL	85.0	13175	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	MnPrv	NaN	0	2	2010	WD	Normal	210000
+1458	70	RL	66.0	9042	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	GdPrv	Shed	2500	5	2010	WD	Normal	266500
+1459	20	RL	68.0	9717	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	NaN	NaN	0	4	2010	WD	Normal	142125
+1460	20	RL	75.0	9937	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	NaN	NaN	NaN	0	6	2008	WD	Normal	147500
+1460 rows × 80 columns
+
+X_test_full
+MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	LandContour	Utilities	LotConfig	...	ScreenPorch	PoolArea	PoolQC	Fence	MiscFeature	MiscVal	MoSold	YrSold	SaleType	SaleCondition
+Id																					
+1461	20	RH	80.0	11622	Pave	NaN	Reg	Lvl	AllPub	Inside	...	120	0	NaN	MnPrv	NaN	0	6	2010	WD	Normal
+1462	20	RL	81.0	14267	Pave	NaN	IR1	Lvl	AllPub	Corner	...	0	0	NaN	NaN	Gar2	12500	6	2010	WD	Normal
+1463	60	RL	74.0	13830	Pave	NaN	IR1	Lvl	AllPub	Inside	...	0	0	NaN	MnPrv	NaN	0	3	2010	WD	Normal
+1464	60	RL	78.0	9978	Pave	NaN	IR1	Lvl	AllPub	Inside	...	0	0	NaN	NaN	NaN	0	6	2010	WD	Normal
+1465	120	RL	43.0	5005	Pave	NaN	IR1	HLS	AllPub	Inside	...	144	0	NaN	NaN	NaN	0	1	2010	WD	Normal
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+2915	160	RM	21.0	1936	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	0	NaN	NaN	NaN	0	6	2006	WD	Normal
+2916	160	RM	21.0	1894	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	0	NaN	NaN	NaN	0	4	2006	WD	Abnorml
+2917	20	RL	160.0	20000	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	0	NaN	NaN	NaN	0	9	2006	WD	Abnorml
+2918	85	RL	62.0	10441	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	0	NaN	MnPrv	Shed	700	7	2006	WD	Normal
+2919	60	RL	74.0	9627	Pave	NaN	Reg	Lvl	AllPub	Inside	...	0	0	NaN	NaN	NaN	0	11	2006	WD	Normal
+1459 rows × 79 columns
+
+X_full.shape, X_test_full.shape
+((1460, 80), (1459, 79))
+X_full.dropna(axis=0, subset=['SalePrice'], inplace=True)
+y = X_full.SalePrice
+X_full.drop(['SalePrice'], axis=1, inplace=True)
+X_train_full, X_valid_full, y_train, y_valid = train_test_split(X_full, y, 
+                                                                train_size=0.8, test_size=0.2,
+                                                                random_state=0)
+X_train_full.shape, X_valid_full.shape, y_train.shape, y_valid.shape
+((1168, 79), (292, 79), (1168,), (292,))
+categorical_cols = [cname for cname in X_train_full.columns if
+                    X_train_full[cname].nunique() < 10 and 
+                    X_train_full[cname].dtype == "object"]
+categorical_cols
+['MSZoning',
+ 'Street',
+ 'Alley',
+ 'LotShape',
+ 'LandContour',
+ 'Utilities',
+ 'LotConfig',
+ 'LandSlope',
+ 'Condition1',
+ 'Condition2',
+ 'BldgType',
+ 'HouseStyle',
+ 'RoofStyle',
+ 'RoofMatl',
+ 'MasVnrType',
+ 'ExterQual',
+ 'ExterCond',
+ 'Foundation',
+ 'BsmtQual',
+ 'BsmtCond',
+ 'BsmtExposure',
+ 'BsmtFinType1',
+ 'BsmtFinType2',
+ 'Heating',
+ 'HeatingQC',
+ 'CentralAir',
+ 'Electrical',
+ 'KitchenQual',
+ 'Functional',
+ 'FireplaceQu',
+ 'GarageType',
+ 'GarageFinish',
+ 'GarageQual',
+ 'GarageCond',
+ 'PavedDrive',
+ 'PoolQC',
+ 'Fence',
+ 'MiscFeature',
+ 'SaleType',
+ 'SaleCondition']
+numerical_cols = [cname for cname in X_train_full.columns if 
+                X_train_full[cname].dtype in ['int64', 'float64']]
+numerical_cols
+['MSSubClass',
+ 'LotFrontage',
+ 'LotArea',
+ 'OverallQual',
+ 'OverallCond',
+ 'YearBuilt',
+ 'YearRemodAdd',
+ 'MasVnrArea',
+ 'BsmtFinSF1',
+ 'BsmtFinSF2',
+ 'BsmtUnfSF',
+ 'TotalBsmtSF',
+ '1stFlrSF',
+ '2ndFlrSF',
+ 'LowQualFinSF',
+ 'GrLivArea',
+ 'BsmtFullBath',
+ 'BsmtHalfBath',
+ 'FullBath',
+ 'HalfBath',
+ 'BedroomAbvGr',
+ 'KitchenAbvGr',
+ 'TotRmsAbvGrd',
+ 'Fireplaces',
+ 'GarageYrBlt',
+ 'GarageCars',
+ 'GarageArea',
+ 'WoodDeckSF',
+ 'OpenPorchSF',
+ 'EnclosedPorch',
+ '3SsnPorch',
+ 'ScreenPorch',
+ 'PoolArea',
+ 'MiscVal',
+ 'MoSold',
+ 'YrSold']
+my_cols = categorical_cols + numerical_cols
+X_train = X_train_full[my_cols].copy()
+X_valid = X_valid_full[my_cols].copy()
+X_test = X_test_full[my_cols].copy()
+my_cols
+['MSZoning',
+ 'Street',
+ 'Alley',
+ 'LotShape',
+ 'LandContour',
+ 'Utilities',
+ 'LotConfig',
+ 'LandSlope',
+ 'Condition1',
+ 'Condition2',
+ 'BldgType',
+ 'HouseStyle',
+ 'RoofStyle',
+ 'RoofMatl',
+ 'MasVnrType',
+ 'ExterQual',
+ 'ExterCond',
+ 'Foundation',
+ 'BsmtQual',
+ 'BsmtCond',
+ 'BsmtExposure',
+ 'BsmtFinType1',
+ 'BsmtFinType2',
+ 'Heating',
+ 'HeatingQC',
+ 'CentralAir',
+ 'Electrical',
+ 'KitchenQual',
+ 'Functional',
+ 'FireplaceQu',
+ 'GarageType',
+ 'GarageFinish',
+ 'GarageQual',
+ 'GarageCond',
+ 'PavedDrive',
+ 'PoolQC',
+ 'Fence',
+ 'MiscFeature',
+ 'SaleType',
+ 'SaleCondition',
+ 'MSSubClass',
+ 'LotFrontage',
+ 'LotArea',
+ 'OverallQual',
+ 'OverallCond',
+ 'YearBuilt',
+ 'YearRemodAdd',
+ 'MasVnrArea',
+ 'BsmtFinSF1',
+ 'BsmtFinSF2',
+ 'BsmtUnfSF',
+ 'TotalBsmtSF',
+ '1stFlrSF',
+ '2ndFlrSF',
+ 'LowQualFinSF',
+ 'GrLivArea',
+ 'BsmtFullBath',
+ 'BsmtHalfBath',
+ 'FullBath',
+ 'HalfBath',
+ 'BedroomAbvGr',
+ 'KitchenAbvGr',
+ 'TotRmsAbvGrd',
+ 'Fireplaces',
+ 'GarageYrBlt',
+ 'GarageCars',
+ 'GarageArea',
+ 'WoodDeckSF',
+ 'OpenPorchSF',
+ 'EnclosedPorch',
+ '3SsnPorch',
+ 'ScreenPorch',
+ 'PoolArea',
+ 'MiscVal',
+ 'MoSold',
+ 'YrSold']
+numerical_transformer = SimpleImputer(strategy='constant')
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numerical_transformer, numerical_cols),
+        ('cat', categorical_transformer, categorical_cols)
+    ])
+Random Forest Regressor
+# Define model1
+model1 = RandomForestRegressor(n_estimators=800,random_state=20)
+
+# Bundle preprocessing and modeling code in a pipeline
+my_pipeline1 = Pipeline(steps=[('preprocessor', preprocessor),
+                              ('model', model1)
+                             ])
+
+# Preprocessing of training data, fit model 
+my_pipeline1.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds1 = my_pipeline1.predict(X_valid)
+Randomized CV for Hyperparameter optimization
+from sklearn.model_selection import RandomizedSearchCV
+#Randomized Search CV
+
+# Number of trees in random forest
+n_estimators = [int(x) for x in np.linspace(start = 100, stop = 1200, num = 12)]
+# Number of features to consider at every split
+max_features = ['auto', 'sqrt']
+# Maximum number of levels in tree
+max_depth = [int(x) for x in np.linspace(5, 30, num = 6)]
+# Minimum number of samples required to split a node
+min_samples_split = [2, 5, 10, 15, 100]
+# Minimum number of samples required at each leaf node
+min_samples_leaf = [1, 2, 5, 10]
+# Create the random grid
+
+random_grid = {'n_estimators': n_estimators,
+               'max_features': max_features,
+               'max_depth': max_depth,
+               'min_samples_split': min_samples_split,
+               'min_samples_leaf': min_samples_leaf}
+rf_random = RandomizedSearchCV(estimator = model1, param_distributions = random_grid,scoring='neg_mean_squared_error', n_iter = 10, cv = 5, verbose=2, random_state=42, n_jobs = 1)
+randomized = Pipeline(steps=[('preprocessor', preprocessor),
+                              ('random', rf_random)
+                             ])
+randomized.fit(X_train, y_train)
+Fitting 5 folds for each of 10 candidates, totalling 50 fits
+[CV] n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10 
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10, total=   2.4s
+[CV] n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10 
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    2.4s remaining:    0.0s
+[CV]  n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10, total=   2.4s
+[CV] n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10 
+[CV]  n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10, total=   2.4s
+[CV] n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10 
+[CV]  n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10, total=   2.5s
+[CV] n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10 
+[CV]  n_estimators=900, min_samples_split=5, min_samples_leaf=5, max_features=sqrt, max_depth=10, total=   2.4s
+[CV] n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15, total=   3.1s
+[CV] n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15, total=   3.1s
+[CV] n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15, total=   3.1s
+[CV] n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15, total=   3.2s
+[CV] n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=1100, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=15, total=   3.2s
+[CV] n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15, total=   2.2s
+[CV] n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15, total=   2.2s
+[CV] n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15, total=   2.2s
+[CV] n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15, total=   2.2s
+[CV] n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=100, min_samples_leaf=5, max_features=auto, max_depth=15, total=   2.2s
+[CV] n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15, total=   5.1s
+[CV] n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15, total=   5.2s
+[CV] n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15, total=   5.1s
+[CV] n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15, total=   5.1s
+[CV] n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15 
+[CV]  n_estimators=400, min_samples_split=5, min_samples_leaf=5, max_features=auto, max_depth=15, total=   5.1s
+[CV] n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20, total=   7.4s
+[CV] n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20, total=   7.5s
+[CV] n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20, total=   7.5s
+[CV] n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20, total=   7.5s
+[CV] n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=5, min_samples_leaf=10, max_features=auto, max_depth=20, total=   7.5s
+[CV] n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25 
+[CV]  n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25, total=   3.9s
+[CV] n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25 
+[CV]  n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25, total=   3.9s
+[CV] n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25 
+[CV]  n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25, total=   3.9s
+[CV] n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25 
+[CV]  n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25, total=   3.9s
+[CV] n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25 
+[CV]  n_estimators=1000, min_samples_split=2, min_samples_leaf=1, max_features=sqrt, max_depth=25, total=   3.9s
+[CV] n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5, total=   2.5s
+[CV] n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5, total=   2.5s
+[CV] n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5, total=   2.5s
+[CV] n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5, total=   2.5s
+[CV] n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=1100, min_samples_split=15, min_samples_leaf=10, max_features=sqrt, max_depth=5, total=   2.6s
+[CV] n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15, total=   0.9s
+[CV] n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15, total=   0.9s
+[CV] n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15, total=   0.9s
+[CV] n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15, total=   0.9s
+[CV] n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15 
+[CV]  n_estimators=300, min_samples_split=15, min_samples_leaf=1, max_features=sqrt, max_depth=15, total=   0.9s
+[CV] n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5, total=   1.6s
+[CV] n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5, total=   1.6s
+[CV] n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5, total=   1.6s
+[CV] n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5, total=   1.6s
+[CV] n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5 
+[CV]  n_estimators=700, min_samples_split=10, min_samples_leaf=2, max_features=sqrt, max_depth=5, total=   1.6s
+[CV] n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20, total=   9.3s
+[CV] n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20, total=   9.2s
+[CV] n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20, total=   9.2s
+[CV] n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20, total=   9.3s
+[CV] n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20 
+[CV]  n_estimators=700, min_samples_split=15, min_samples_leaf=1, max_features=auto, max_depth=20, total=   9.2s
+[Parallel(n_jobs=1)]: Done  50 out of  50 | elapsed:  3.2min finished
+Pipeline(steps=[('preprocessor',
+                 ColumnTransformer(transformers=[('num',
+                                                  SimpleImputer(strategy='constant'),
+                                                  ['MSSubClass', 'LotFrontage',
+                                                   'LotArea', 'OverallQual',
+                                                   'OverallCond', 'YearBuilt',
+                                                   'YearRemodAdd', 'MasVnrArea',
+                                                   'BsmtFinSF1', 'BsmtFinSF2',
+                                                   'BsmtUnfSF', 'TotalBsmtSF',
+                                                   '1stFlrSF', '2ndFlrSF',
+                                                   'LowQualFinSF', 'GrLivArea',
+                                                   'BsmtFullBath',
+                                                   'BsmtHalfBath', 'FullBa...
+                                    estimator=RandomForestRegressor(n_estimators=800,
+                                                                    random_state=20),
+                                    n_jobs=1,
+                                    param_distributions={'max_depth': [5, 10,
+                                                                       15, 20,
+                                                                       25, 30],
+                                                         'max_features': ['auto',
+                                                                          'sqrt'],
+                                                         'min_samples_leaf': [1,
+                                                                              2,
+                                                                              5,
+                                                                              10],
+                                                         'min_samples_split': [2,
+                                                                               5,
+                                                                               10,
+                                                                               15,
+                                                                               100],
+                                                         'n_estimators': [100,
+                                                                          200,
+                                                                          300,
+                                                                          400,
+                                                                          500,
+                                                                          600,
+                                                                          700,
+                                                                          800,
+                                                                          900,
+                                                                          1000,
+                                                                          1100,
+                                                                          1200]},
+                                    random_state=42,
+                                    scoring='neg_mean_squared_error',
+                                    verbose=2))])
+rf_random.best_params_
+{'n_estimators': 1000,
+ 'min_samples_split': 2,
+ 'min_samples_leaf': 1,
+ 'max_features': 'sqrt',
+ 'max_depth': 25}
+Random Forest Regressor After using Best Parameters
+# Define model1
+tuned_rand = RandomForestRegressor(n_estimators = 1000,
+ min_samples_split= 2,
+ min_samples_leaf= 1,
+ max_features= 'sqrt',
+ max_depth= 25)
+
+# Bundle preprocessing and modeling code in a pipeline
+my_pipeline2= Pipeline(steps=[('preprocessor', preprocessor),
+                              ('model', tuned_rand)
+                             ])
+
+# Preprocessing of training data, fit model 
+my_pipeline2.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds2= my_pipeline2.predict(X_valid)
+Xg-Boost
+from xgboost import XGBRegressor
+# Define model1
+xgboost = XGBRegressor()
+
+# Bundle preprocessing and modeling code in a pipeline
+xgpipe= Pipeline(steps=[('preprocessor', preprocessor),
+                              ('model', xgboost)
+                             ])
+
+# Preprocessing of training data, fit model 
+xgpipe.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds3 = xgpipe.predict(X_valid)
+Gradient Boosting Regressor
+# Define model2
+from sklearn.ensemble import GradientBoostingRegressor
+grad = GradientBoostingRegressor(n_estimators=600, random_state=32)
+
+# Bundle preprocessing and modeling code in a pipeline
+grad_pipe = Pipeline(steps=[('preprocessor', preprocessor),
+                              ('model', grad)
+                             ])
+
+# Preprocessing of training data, fit model 
+grad_pipe.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds4 = grad_pipe.predict(X_valid)
+Tuned Gradient Boosting
+# Define model2
+from sklearn.ensemble import GradientBoostingRegressor
+grad_tuned = GradientBoostingRegressor(n_estimators = 1000,
+ min_samples_split= 2,
+ min_samples_leaf= 1,
+ max_features= 'sqrt',
+ max_depth= 25)
+
+# Bundle preprocessing and modeling code in a pipeline
+grad_pipe1 = Pipeline(steps=[('preprocessor', preprocessor),
+                              ('model', grad_tuned)
+                             ])
+
+# Preprocessing of training data, fit model 
+grad_pipe1.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds5 = grad_pipe1.predict(X_valid)
+score = mean_absolute_error(y_valid, preds1)
+print('1 - MAE:', score)
+score = mean_absolute_error(y_valid, preds2)
+print('2 - MAE:', score)
+score = mean_absolute_error(y_valid, preds3)
+print('3 - MAE:', score)
+score = mean_absolute_error(y_valid, preds4)
+print('4 - MAE:', score)
+score = mean_absolute_error(y_valid, preds5)
+print('5 - MAE:', score)
+1 - MAE: 17226.008848458903
+2 - MAE: 17918.556853176287
+3 - MAE: 17709.19373394692
+4 - MAE: 15563.235198675247
+5 - MAE: 19404.416111768962
+preds= (preds1+ preds2+ preds3+ preds4 + preds5)/5
+
+# Evaluate the model
+score = mean_absolute_error(y_valid, preds)
+print('MAE:', score)
+MAE: 16205.754941086821
+preds_test1 = my_pipeline1.predict(X_test)
+preds_test2 = my_pipeline2.predict(X_test)
+preds_test3 = xgpipe.predict(X_test)
+preds_test4 = grad_pipe.predict(X_test)
+preds_test5 = grad_pipe1.predict(X_test)
+preds_test = (preds_test1+preds_test2+ preds_test3+ preds_test4 + preds_test5  )/5
+# Save test predictions to file
+output = pd.DataFrame({'Id': X_test.index,
+                       'SalePrice': preds_test})
+output.to_csv('submission.csv', index=False) 
